@@ -27,10 +27,9 @@ Ask clarifying questions and give ergonomic suggestions.
 
 If appropriate, include markdown links to ergonomic furniture. Use this format:
 
-- [mesh ergonomic chair](https://amzn.to/mesh-chair)
-- [adjustable sit-stand desk](https://amzn.to/standing-desk)
-- [monitor riser](https://amzn.to/monitor-riser)
-- [lumbar support pillow](https://amzn.to/lumbar-pillow)
+- [Flexispot EN1 Electric Standing Desk](https://www.amazon.com/Flexispot-Standing-Adjustable-Electric-Blacktop/dp/B07H2W9Y3W)
+- [Samsonite Lumbar Support Pillow](https://www.amazon.com/Back-Cushion-Lumbar-Support-Pillow/dp/B01IJNJAZ0)
+- [Amazon Basics Monitor Riser](https://www.amazon.com/AmazonBasics-Adjustable-Computer-Monitor-Riser/dp/B00X4SCCFG)
 
 Only suggest products when they’re clearly needed. Keep advice short, friendly, and helpful.
 """
@@ -45,9 +44,9 @@ if "chat" not in st.session_state:
 # ─────────────────────────────────────────────
 # ✅ 5. Interface
 st.title("🪑 AI Ergonomic Home Office Consultant")
-st.markdown("Tell me about your desk, chair, pain, posture... I’ll guide you toward comfort — and gear if you need it!")
+st.markdown("Describe your workspace or any discomfort you're experiencing, and I'll provide ergonomic advice and product suggestions if needed.")
 
-user_input = st.text_input("💬 Describe your workspace or issue:")
+user_input = st.text_input("💬 How can I assist you today?")
 
 # ─────────────────────────────────────────────
 # ✅ 6. Message handling
@@ -55,7 +54,7 @@ if st.button("Get Ergonomic Advice"):
     if not user_input.strip():
         st.warning("⚠️ Please enter a description of your workspace or discomfort.")
     else:
-        with st.spinner("Thinking..."):
+        with st.spinner("Analyzing your input..."):
             try:
                 # First message: inject role + user input
                 if not st.session_state.agent_initialized:
@@ -65,7 +64,7 @@ if st.button("Get Ergonomic Advice"):
                 else:
                     response = st.session_state.chat.send_message(user_input)
 
-                st.success("✅ Here’s your ergonomic advice:")
+                st.success("✅ Here's your ergonomic advice:")
                 st.markdown(response.text)
 
             except Exception as e:

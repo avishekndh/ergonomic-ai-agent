@@ -4,35 +4,39 @@ import os
 from dotenv import load_dotenv
 
 # ─────────────────────────────────────────────
-# ✅ 1. App config
+# ✅ 1. Setup
 st.set_page_config(page_title="AI Ergonomic Consultant", page_icon="🪑")
 
 # ─────────────────────────────────────────────
-# ✅ 2. Load key
+# ✅ 2. Load API key
 load_dotenv()
 api_key = os.getenv("GEMINI_API_KEY")
+
 if not api_key:
-    st.error("❌ No API key found in .env or Streamlit Secrets.")
+    st.error("❌ Missing GEMINI_API_KEY. Set it in your .env or Streamlit Secrets.")
     st.stop()
 
 genai.configure(api_key=api_key)
 
 # ─────────────────────────────────────────────
-# ✅ 3. Product-friendly prompt (inserted once)
+# ✅ 3. Agent role prompt with product examples
 agent_intro = """
-You are a helpful ergonomic AI assistant. Your goal is to help users improve their home office setup.
+You are an ergonomic assistant. Help users improve their home office setup.
 
-✅ Ask follow-up questions if needed.
-✅ Suggest ergonomic improvements.
-✅ If appropriate, recommend ergonomic products using markdown links (example: [chair](https://amzn.to/chair123)).
-✅ Keep advice friendly, clear, and short. Don’t recommend a product every time — only when it makes sense.
+Ask clarifying questions and give ergonomic suggestions.
 
-Example:
-"If you're experiencing wrist pain, consider a wrist rest like [this gel pad](https://amzn.to/example)."
+If appropriate, include markdown links to ergonomic furniture. Use this format:
+
+- [mesh ergonomic chair](https://amzn.to/mesh-chair)
+- [adjustable sit-stand desk](https://amzn.to/standing-desk)
+- [monitor riser](https://amzn.to/monitor-riser)
+- [lumbar support pillow](https://amzn.to/lumbar-pillow)
+
+Only suggest products when they’re clearly needed. Keep advice short, friendly, and helpful.
 """
 
 # ─────────────────────────────────────────────
-# ✅ 4. Start Gemini chat if new
+# ✅ 4. Start chat session
 if "chat" not in st.session_state:
     model = genai.GenerativeModel("gemini-1.5-pro-latest")
     st.session_state.chat = model.start_chat()
@@ -41,40 +45,40 @@ if "chat" not in st.session_state:
 # ─────────────────────────────────────────────
 # ✅ 5. Interface
 st.title("🪑 AI Ergonomic Home Office Consultant")
-st.markdown("Tell me about your desk, chair, pain, posture... and I'll guide you toward comfort (and gear if needed).")
+st.markdown("Tell me about your desk, chair, pain, posture... I’ll guide you toward comfort — and gear if you need it!")
 
-user_input = st.text_input("💬 How can I help improve your workspace today?")
+user_input = st.text_input("💬 Describe your workspace or issue:")
 
 # ─────────────────────────────────────────────
-# ✅ 6. Handle message with smart intro
+# ✅ 6. Message handling
 if st.button("Get Ergonomic Advice"):
     if not user_input.strip():
-        st.warning("⚠️ Please describe your workspace!")
+        st.warning("⚠️ Please enter a description of your workspace or discomfort.")
     else:
-        with st.spinner("Thinking ergonomically..."):
+        with st.spinner("Thinking..."):
             try:
-                # Add role prompt only for the very first message
+                # First message: inject role + user input
                 if not st.session_state.agent_initialized:
-                    first_msg = f"{agent_intro}\n\nUser: {user_input}"
-                    response = st.session_state.chat.send_message(first_msg)
+                    prompt = f"{agent_intro}\n\nUser: {user_input}"
+                    response = st.session_state.chat.send_message(prompt)
                     st.session_state.agent_initialized = True
                 else:
                     response = st.session_state.chat.send_message(user_input)
 
-                st.success("✅ Here's your advice:")
+                st.success("✅ Here’s your ergonomic advice:")
                 st.markdown(response.text)
 
             except Exception as e:
                 st.error(f"❌ Error: {e}")
 
 # ─────────────────────────────────────────────
-# ✅ 7. Display chat history
+# ✅ 7. Show full conversation history
 if st.session_state.chat.history:
-    st.markdown("### 🧾 Conversation History")
+    st.markdown("### 📜 Conversation History")
     for msg in st.session_state.chat.history:
         text = msg.parts[0].text.strip()
         if agent_intro.strip() in text:
-            continue  # Skip initial role prompt
+            continue  # hide system prompt
         if msg.role == "user":
             st.markdown(f"🧑‍💻 **You:** {text}")
         elif msg.role == "model":
